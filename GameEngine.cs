@@ -14,8 +14,11 @@
             }
             set
             {
-                curSceneX = value;
-                CurrScene = world.scenes[curSceneY, curSceneX];
+                if (value >= 0 && value < world.scenes.GetLength(1))
+                {
+                    curSceneX = value;
+                    CurrScene = world.scenes[curSceneY, curSceneX];
+                }
             }
         }
         static int curSceneY;
@@ -27,8 +30,11 @@
             }
             set
             {
-                curSceneY = value;
-                CurrScene = world.scenes[curSceneY, curSceneX];
+                if (value >= 0 && value < world.scenes.GetLength(0))
+                {
+                    curSceneY = value;
+                    CurrScene = world.scenes[curSceneY, curSceneX];
+                }
             }
         }
 
@@ -38,7 +44,7 @@
             int prevSceneX = CurSceneX;
             int prevSceneY = CurSceneY;
             
-            if (sceneX >= 0 && sceneY >= 0 && sceneX < world.scenes.GetLength(1) && sceneY < world.scenes.GetLength(0))
+            if (sceneX >= 0 && sceneY >= 0 && sceneX < world.scenes.GetLength(1) - 1 && sceneY < world.scenes.GetLength(0) - 1)
             {
                 CurSceneX = sceneX;
                 CurSceneY = sceneY;
@@ -62,9 +68,9 @@
             switch (dir)
             {
                 case 1: if (CurSceneY > 0) CurSceneY--; else couldChangeScene = false; break;
-                case 2: if (CurSceneY < world.scenes.GetLength(0)) CurSceneY++; else couldChangeScene = false; break;
+                case 2: if (CurSceneY < world.scenes.GetLength(0)-1) CurSceneY++; else couldChangeScene = false; break;
                 case 3: if(CurSceneX > 0) CurSceneX--; else couldChangeScene = false; break;
-                case 4: if(CurSceneX < world.scenes.GetLength(1)) CurSceneX++; else couldChangeScene = false; break;
+                case 4: if(CurSceneX < world.scenes.GetLength(1)-1) CurSceneX++; else couldChangeScene = false; break;
             }
             if (couldChangeScene && player != null)
             {
