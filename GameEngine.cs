@@ -127,20 +127,21 @@
 
     public static class Input
     {
-        static char? input;
+        static ConsoleKey input;
         public static void UpdateInput()
         {
             if (Console.KeyAvailable)
             {
-                input = Console.ReadKey(true).KeyChar;
+                input = Console.ReadKey(true).Key;
                 while (Console.KeyAvailable) Console.ReadKey(true);
             }
             else
             {
-                input = null;
+                input = ConsoleKey.None;
             }
+            
         }
-        public static char? GetInput()
+        public static ConsoleKey GetInput()
         {
             return input;
         }
@@ -185,6 +186,24 @@
                 }
             }
             Console.SetCursorPosition(GameManager.CurrScene.sceneWidth + 1, 0);
+        }
+    }
+    public static class Debugger
+    {
+        const int maxMessages = 10;
+        static List<String> messages = new List<String>();
+
+        public static void Write(string msg)
+        {
+            if(messages.Count >= maxMessages) messages.RemoveAt(0);
+            messages.Add(msg);
+            string debuggerMessages = "Debugger: \n";
+            for (int i = messages.Count - 1; i >= 0; i--)
+            {
+                debuggerMessages += $"{messages.Count-i}| {DateTime.Now} - {messages[i]}                                                                         \n";
+            }
+            Console.SetCursorPosition(0, GameManager.CurrScene.sceneHeight + 1);
+            Console.WriteLine(debuggerMessages);
         }
     }
     public class World

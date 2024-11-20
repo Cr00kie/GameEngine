@@ -64,25 +64,16 @@ namespace GameEngine
 
         public override void UpdateComponent()
         {
-            bool collisionDetected = false; //for testing
             List<GameObject> objectsToCheck = new List<GameObject>();
-            objectsToCheck.AddRange(GameManager.CurrScene.gameObjects);
+            objectsToCheck.AddRange(GameManager.CurrScene.gameObjects.Where(x=> x.GetComponent<SquareCollider>() != null)); //Only check objects that have colliders (It could do it with objects without collider but i guess if you don't give them a collider is because you dont want it to collide)
             foreach(GameObject go in objectsToCheck)
             {
                 if (CollisionDetector.AABCollision(go, gameObject))
                 {
                     gameObject.CallCollisionEvent(go);
                     go.CallCollisionEvent(gameObject);
-                    collisionDetected = true;
+                    Debugger.Write($"Collision Detected between {gameObject.tag}({gameObject.transform.X}, {gameObject.transform.Y}) and {go.tag}({go.transform.X}, {go.transform.Y})");
                 }
-            }
-            if (collisionDetected)
-            {
-                Console.WriteLine("Collision detected");
-            }
-            else
-            {
-                Console.WriteLine("                  ");
             }
         }
     }
@@ -108,25 +99,27 @@ namespace GameEngine
 
         public override void UpdateComponent()
         {
-            char? input = Input.GetInput();
-
-            switch(input)
+            ConsoleKey? input = Input.GetInput();
+            if (input != null)
             {
-                case 'a':
-                    gameObject.transform.X--;
-                    break;
-                case 'd':
-                    gameObject.transform.X++;
-                    break;
-                case 'w':
-                    gameObject.transform.Y--;
-                    break;
-                case 's':
-                    gameObject.transform.Y++;
-                    break;
-                default:
-                    break;
+                switch (input)
+                {
+                    case ConsoleKey.A:
+                        gameObject.transform.X--;
+                        break;
+                    case ConsoleKey.D:
+                        gameObject.transform.X++;
+                        break;
+                    case ConsoleKey.W:
+                        gameObject.transform.Y--;
+                        break;
+                    case ConsoleKey.S:
+                        gameObject.transform.Y++;
+                        break;
+                    default:
+                        break;
 
+                }
             }
         }
     }
