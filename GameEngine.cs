@@ -1,109 +1,42 @@
 ﻿namespace GameEngine
 {
-    public static class GameManager
+    public static class GameEngine
     {
         public static int delta = 25;
-        public static World world = new World(10, 10, 32, 32);
-        public static Scene CurrScene { get; private set; } = world.scenes[0, 0];
-        static int curSceneX;
-        public static int CurSceneX
+        public static Scene CurrScene { get; private set; }
+
+        public static void SetProperties(int dt = 100, int screenWidth = 32, int screenHeight = 32)
         {
-            get
-            {
-                return curSceneX;
-            }
-            set
-            {
-                if (value >= 0 && value < world.scenes.GetLength(1))
-                {
-                    curSceneX = value;
-                    CurrScene = world.scenes[curSceneY, curSceneX];
-                }
-            }
-        }
-        static int curSceneY;
-        public static int CurSceneY
-        {
-            get
-            {
-                return curSceneY;
-            }
-            set
-            {
-                if (value >= 0 && value < world.scenes.GetLength(0))
-                {
-                    curSceneY = value;
-                    CurrScene = world.scenes[curSceneY, curSceneX];
-                }
-            }
+            GameEngine.delta = dt;
+            CurrScene = new Scene(screenWidth, screenHeight);
         }
 
-        public static void ChangeSceneByCoords(int sceneX, int sceneY)
+        public static void RunGameEngine(Scene startingScene)
         {
-            GameObject? player = CurrScene.FindGameObjectByTag("player");//To move the player to the new screen
-            int prevSceneX = CurSceneX;
-            int prevSceneY = CurSceneY;
-            
-            if (sceneX >= 0 && sceneY >= 0 && sceneX < world.scenes.GetLength(1) - 1 && sceneY < world.scenes.GetLength(0) - 1)
-            {
-                CurSceneX = sceneX;
-                CurSceneY = sceneY;
-                if (player != null)
-                {
-                    CurrScene.InstantiateObject(player); //To move the player to the new screen if the scene has changed
-                    world.scenes[prevSceneY,prevSceneX].DestroyObject(player); //Delete the player from the previous scene
-                }
-            }
-            
-        }
-        public static bool ChangeSceneByDirection(int dir)
-        {
-            ///<summary>1 = up, 2 = down, 3 = left, 4 = right</summary>
-            ///<returns> true if could change screen, false if not </returns>
-            bool couldChangeScene = true;
-            GameObject? player = CurrScene.FindGameObjectByTag("player");//To move the player to the new screen
-            int prevSceneX = CurSceneX;
-            int prevSceneY = CurSceneY;
-
-            switch (dir)
-            {
-                case 1: if (CurSceneY > 0) CurSceneY--; else couldChangeScene = false; break;
-                case 2: if (CurSceneY < world.scenes.GetLength(0)-1) CurSceneY++; else couldChangeScene = false; break;
-                case 3: if(CurSceneX > 0) CurSceneX--; else couldChangeScene = false; break;
-                case 4: if(CurSceneX < world.scenes.GetLength(1)-1) CurSceneX++; else couldChangeScene = false; break;
-            }
-            if (couldChangeScene && player != null)
-            {
-                CurrScene.InstantiateObject(player); //To move the player to the new screen if scene has changed
-                world.scenes[prevSceneY, prevSceneX].DestroyObject(player); //Delete the player from the previous scene
-            }
-            return couldChangeScene;
-        }
-    }
-
-    public class GameEngine
-    {
-        public GameEngine(int dt = 100, int worldWidth = 10, int worldHeight = 10,int screenWidth = 32, int screenHeight = 32)
-        {
-            GameManager.delta = dt;
-            GameManager.world = new World(worldWidth, worldHeight, screenWidth, screenHeight);
-        }
-
-        public void RunGameEngine(int startSceneX, int startSceneY)
-        {
-            GameManager.ChangeSceneByCoords(startSceneX, startSceneY); 
+            ChangeScene(startingScene);
             bool gameRunning = true;
 
             int frameCount = 0;
             while (gameRunning)
             {
                 Input.UpdateInput();
-                GameManager.CurrScene.UpdateObjects();
+                GameEngine.CurrScene.UpdateObjects();
                 Renderer.RenderScene();
-                Thread.Sleep(GameManager.delta);
-                Console.Title = "frames: " + frameCount + " scenePos: X" + GameManager.CurSceneX + " Y" + GameManager.CurSceneY;
+                Thread.Sleep(GameEngine.delta);
+                Console.Title = "frames: " + frameCount;
                 frameCount++;
             }
+        }
+
+        public static void ChangeScene(Scene newScene)
+        {
+            List<GameObject> gameObjectsSavedBetweenScreens = CurrScene.gameObjects.Where(x => x.keepWhenChangingScreens).ToList();
+            for(int i = 0; i < gameObjectsSavedBetweenScreens.Count; i++)
+            {
+                newScene.InstantiateObject(gameObjectsSavedBetweenScreens[i]);
+                CurrScene.DestroyObject(gameObjectsSavedBetweenScreens[i]);
+            }
+            CurrScene = newScene;
         }
     }
 
@@ -191,7 +124,7 @@
                     screen[i, j] = ' ';
                 }
             }
-            Console.SetCursorPosition(GameManager.CurrScene.sceneWidth + 1, 0);
+            Console.SetCursorPosition(GameEngine.CurrScene.sceneWidth + 1, 0);
         }
     }
     public static class Debugger
@@ -206,36 +139,13 @@
             string debuggerMessages = "Debugger: \n";
             for (int i = messages.Count - 1; i >= 0; i--)
             {
-                debuggerMessages += $"{messages.Count-i}| {DateTime.Now} - {messages[i]}                                                                         \n";
+                debuggerMessages += $"{messages.Count-i}| {DateTime.Now} - {messages[i]}                                                                    \n";
             }
-            Console.SetCursorPosition(0, GameManager.CurrScene.sceneHeight + 1);
+            Console.SetCursorPosition(0, GameEngine.CurrScene.sceneHeight + 1);
             Console.WriteLine(debuggerMessages);
         }
     }
-    public class World
-    {
-        public Scene[,] scenes;
-        public World(int wWidth, int wHeight, int sWidth, int sHeight)
-        {
-            scenes = new Scene[wWidth, wHeight];
-            //Fill the world
-            for(int i = 0; i < scenes.GetLength(0); i++)
-            {
-                for(int j = 0; j < scenes.GetLength(1); j++)
-                {
-                    scenes[i,j] = new Scene(sWidth, sHeight);
-                }
-            }
-        }
-        public World(Scene[,] scenes)
-        {
-            this.scenes = scenes;
-        }
-        public void ChangeScene(Scene scene, int posX, int posY)
-        {
-            scenes[posY, posX] = scene;
-        }
-    }
+    
     public class Scene
     {
         public int sceneWidth, sceneHeight;
@@ -255,6 +165,7 @@
         public void InstantiateObject(GameObject gameObject)
         {
             gameObjects.Add(gameObject);
+            gameObject.OnInstantiation(this);
         }
 
         public void DestroyObject(GameObject gameObject)
@@ -265,6 +176,10 @@
         public GameObject? FindGameObjectByTag(string tag)
         {
             return gameObjects.Find(x => x.tag == tag);
+        }
+        public GameObject? FindGameObjectByComponent(Type component)
+        {
+            return gameObjects.Find(x => x.GetComponent(component) != null);
         }
 
         public void UpdateObjects()
@@ -288,6 +203,8 @@
 
         public string tag;
 
+        public bool keepWhenChangingScreens = false;
+
         public void CallCollisionEvent(GameObject obj)
         {
             if (OnCollision != null) OnCollision(obj);
@@ -310,16 +227,18 @@
             return components.Find(x => x.GetType() == type);
         }
 
-        public GameObject(string tag, int x = 0, int y = 0, int width = 1, int height = 1)
+        public GameObject(string tag, int x = 0, int y = 0, int width = 1, int height = 1, bool keepWhenChangingScreens = false)
         {
             transform = new Transform(this, x, y, width, height);
             components.Add(transform);
             this.tag = tag;
+            this.keepWhenChangingScreens = keepWhenChangingScreens;
         }
-        public GameObject(string tag, int x = 0, int y = 0, int width = 1, int height = 1, params Component[] components)
+        public GameObject(string tag, int x = 0, int y = 0, int width = 1, int height = 1, bool keepWhenChangingScreens = false ,params Component[] components)
         {
             transform = new Transform(this);
             this.components.Add(transform);
+            this.keepWhenChangingScreens = keepWhenChangingScreens;
             foreach (Component comp in components)
             {
                 AddComponent(comp);
@@ -335,9 +254,17 @@
             }
         }
 
+        public virtual void OnInstantiation(Scene sceneInstatiatedIn)
+        {
+            foreach (Component component in components)
+            {
+                component.OnInstantiation(sceneInstatiatedIn);
+            }
+        }
+
         public void Destroy()
         {
-            GameManager.CurrScene.DestroyObject(this);
+            GameEngine.CurrScene.DestroyObject(this);
         }
     }
 }

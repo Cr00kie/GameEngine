@@ -15,6 +15,7 @@ namespace GameEngine
         {
 
         }
+        public virtual void OnInstantiation(Scene sceneInstatiatedIn) { }
     }
     public class Transform : Component
     {
@@ -51,8 +52,8 @@ namespace GameEngine
 
         public override void UpdateComponent()
         {
-            X += vx * GameManager.delta/1000f;
-            Y += vy * GameManager.delta/1000f;
+            X += vx * GameEngine.delta/1000f;
+            Y += vy * GameEngine.delta/1000f;
         }
     }
 
@@ -65,7 +66,7 @@ namespace GameEngine
         public override void UpdateComponent()
         {
             List<GameObject> objectsToCheck = new List<GameObject>();
-            objectsToCheck.AddRange(GameManager.CurrScene.gameObjects.Where(x=> x.GetComponent<SquareCollider>() != null)); //Only check objects that have colliders (It could do it with objects without collider but i guess if you don't give them a collider is because you dont want it to collide)
+            objectsToCheck.AddRange(GameEngine.CurrScene.gameObjects.Where(x=> x.GetComponent<SquareCollider>() != null)); //Only check objects that have colliders (It could do it with objects without collider but i guess if you don't give them a collider is because you dont want it to collide)
             foreach(GameObject go in objectsToCheck)
             {
                 if (CollisionDetector.AABCollision(go, gameObject))
@@ -123,42 +124,27 @@ namespace GameEngine
             }
         }
     }
-    public class CollisionManager : Component
+    public class SolidBehaviour : Component
     {
-        public CollisionManager(GameObject gameObject) : base(gameObject)
+        public SolidBehaviour(GameObject gameObject) : base(gameObject)
         {
-            gameObject.OnCollision += WallCollision;
-            gameObject.OnCollision += SceneBorderCollision;
+            gameObject.OnCollision += OnCollision;
         }
+        public void OnCollision(GameObject objCollided)
+        {
+            float desplazamientoX = 0;
+            float desplazamientoY = 0;
+            //No es muy bonito pero ahora no se me ocurre nada mejor
+            if (gameObject.transform.X0 - gameObject.transform.X > 0) desplazamientoX = 1;
+            else if (gameObject.transform.X0 - gameObject.transform.X < 0) desplazamientoX = -1;
+            if (gameObject.transform.Y0 - gameObject.transform.Y > 0) desplazamientoY = 1;
+            else if (gameObject.transform.Y0 - gameObject.transform.Y < 0) desplazamientoY = -1;
+            do
+            {
+                gameObject.transform.X += desplazamientoX;
+                gameObject.transform.Y += desplazamientoY;
+            } while (CollisionDetector.AABCollision(gameObject, objCollided));
 
-        public void WallCollision(GameObject wall)
-        {
-            if (wall.tag == "wall")
-            {
-                float desplazamientoX = 0;
-                float desplazamientoY = 0; 
-                //No es muy bonito pero ahora no se me ocurre nada mejor
-                if (gameObject.transform.X0 - gameObject.transform.X > 0) desplazamientoX = 1;
-                else if (gameObject.transform.X0 - gameObject.transform.X < 0) desplazamientoX = -1;
-                if (gameObject.transform.Y0 - gameObject.transform.Y > 0) desplazamientoY = 1;
-                else if (gameObject.transform.Y0 - gameObject.transform.Y < 0) desplazamientoY = -1;
-                do
-                {
-                    gameObject.transform.X += desplazamientoX;
-                    gameObject.transform.Y += desplazamientoY;
-                } while (CollisionDetector.AABCollision(gameObject, wall));
-            }
-        }
-        public void SceneBorderCollision(GameObject sceneBorder)
-        {
-            switch(sceneBorder.tag)
-            {
-                case "sceneBorderNorth": if(GameManager.ChangeSceneByDirection(1)) gameObject.transform.Y = GameManager.CurrScene.sceneHeight - 2; break;
-                case "sceneBorderSouth": if(GameManager.ChangeSceneByDirection(2)) gameObject.transform.Y = 1;  break;
-                case "sceneBorderWest": if(GameManager.ChangeSceneByDirection(3)) gameObject.transform.X = GameManager.CurrScene.sceneWidth - 2; break;
-                case "sceneBorderEast": if(GameManager.ChangeSceneByDirection(4)) gameObject.transform.X = 1; break;
-                default: break;
-            }
         }
     }
 }
