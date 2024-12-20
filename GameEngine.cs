@@ -95,7 +95,7 @@
             {
                 for (int j = 0; j<sprite.GetLength(1) && j + posX < screen.GetLength(1); j++)
                 {
-                    screen[i + posY, j + posX] = sprite[i, j];
+                    if(i+posY >= 0 && j + posX >= 0) screen[i + posY, j + posX] = sprite[i, j];
                 }
             }
         }
@@ -188,7 +188,7 @@
             objects.AddRange(gameObjects);
             foreach (GameObject gameObject in objects)
             {
-                gameObject.Update();
+               gameObject.Update();
             }
         }
     }
@@ -248,7 +248,9 @@
 
         public virtual void Update()
         {
-            foreach (Component component in components)
+            List<Component> objects = new List<Component>();
+            objects.AddRange(components);
+            foreach (Component component in objects)
             {
                 component.UpdateComponent();
             }

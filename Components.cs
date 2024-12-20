@@ -24,14 +24,14 @@ namespace GameEngine
         public float X
         {
             get { return x; }
-            set { if (value >= 0) { X0 = X; x = value; } }
+            set { X0 = X; x = value; }
         }
         public float Y0 { get; private set; }
         float y;
         public float Y
         {
             get { return y; }
-            set { if (value >= 0) { Y0 = Y; y = value; } }
+            set { Y0 = Y; y = value; }
         }
         public int width;
         public int height;
@@ -80,12 +80,17 @@ namespace GameEngine
     }
     public class SpriteRenderer : Component
     {
-        char[,] sprite;
+        public char[,] sprite;
         public SpriteRenderer(GameObject gameObject, char[,] sprite) : base(gameObject) { this.sprite = sprite; }
         public SpriteRenderer(GameObject gameObject, char texture) : base(gameObject)
         {
             sprite = new char[gameObject.transform.height,gameObject.transform.width];
             for(int i = 0; i < sprite.GetLength(0); i++) for(int j = 0; j < sprite.GetLength(1); j++) sprite[i,j] = texture;
+        }
+        public SpriteRenderer(GameObject gameObject, string text) : base(gameObject)
+        {
+            sprite = new char[1, text.Length];
+            for(int i = 0; i < text.Length; i++) sprite[0,i] = text[i];
         }
 
         public override void UpdateComponent()
