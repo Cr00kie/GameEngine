@@ -108,9 +108,21 @@
                 }
             }
         }
-        public static void DrawPoint(int x, int y, char sprite)
+        public static void DrawPoint(int x, int y, char texture)
         {
-            if (y > 0 && y < screen.GetLength(0) && x > 0 && x < screen.GetLength(1)) screen[y, x] = sprite;
+            if (y >= 0 && y < screen.GetLength(0) && x >= 0 && x < screen.GetLength(1)) screen[y, x] = texture;
+        }
+        public static void DrawLine(float x1, float y1, float x2, float y2, char texture)
+        {
+            float ux = x2 - x1, uy = y2 - y1;
+            float endLoop = Math.Abs(ux) > Math.Abs(uy) ? Math.Abs(ux) : Math.Abs(uy);
+            float xi = 0, yi = 0;
+            while(Math.Abs(xi) <= endLoop && Math.Abs(yi) <= endLoop)
+            {
+                DrawPoint((int)Math.Round(xi+x1),(int)Math.Round(yi+y1),texture);
+                xi += ux / endLoop;
+                yi += uy / endLoop;
+            }
         }
         public static void RenderScene()
         {
