@@ -8,7 +8,7 @@
         public static void SetProperties(int dt = 100, int screenWidth = 32, int screenHeight = 32)
         {
             GameEngine.delta = dt;
-            CurrScene = new Scene(screenWidth, screenHeight);
+            ChangeScene( new Scene(screenWidth, screenHeight));
         }
 
         public static void RunGameEngine(Scene startingScene)
@@ -30,13 +30,22 @@
 
         public static void ChangeScene(Scene newScene)
         {
-            List<GameObject> gameObjectsSavedBetweenScreens = CurrScene.gameObjects.Where(x => x.keepWhenChangingScreens).ToList();
-            for(int i = 0; i < gameObjectsSavedBetweenScreens.Count; i++)
+            if (CurrScene != null)
             {
-                newScene.InstantiateObject(gameObjectsSavedBetweenScreens[i]);
-                CurrScene.DestroyObject(gameObjectsSavedBetweenScreens[i]);
+                List<GameObject> gameObjectsSavedBetweenScreens = CurrScene.gameObjects.Where(x => x.keepWhenChangingScreens).ToList();
+                for (int i = 0; i < gameObjectsSavedBetweenScreens.Count; i++)
+                {
+                    newScene.InstantiateObject(gameObjectsSavedBetweenScreens[i]);
+                    CurrScene.DestroyObject(gameObjectsSavedBetweenScreens[i]);
+                }
+                CurrScene = newScene;
             }
-            CurrScene = newScene;
+            else 
+            {
+                CurrScene = newScene;
+            }
+
+            Renderer.screen = new char[CurrScene.sceneHeight, CurrScene.sceneWidth];
         }
     }
 
@@ -78,7 +87,7 @@
             {
                 input = ConsoleKey.None;
             }
-            
+
         }
         public static ConsoleKey GetInput()
         {
@@ -98,6 +107,10 @@
                     if(i+posY >= 0 && j + posX >= 0) screen[i + posY, j + posX] = sprite[i, j];
                 }
             }
+        }
+        public static void DrawPoint(int x, int y, char sprite)
+        {
+            if (y > 0 && y < screen.GetLength(0) && x > 0 && x < screen.GetLength(1)) screen[y, x] = sprite;
         }
         public static void RenderScene()
         {
