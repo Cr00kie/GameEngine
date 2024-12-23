@@ -55,6 +55,17 @@ namespace GameEngine
             X += vx * GameEngine.delta/1000f;
             Y += vy * GameEngine.delta/1000f;
         }
+
+        public bool MoveTowards(float x, float y, float speed)
+        {
+            if ((int)x == (int)X && (int)y == (int)Y) 
+                return true;
+            float mod = (float)Math.Sqrt((x - X) * (x - X) + (y - Y) * (y - Y));
+            X += (x - X)/mod * speed * GameEngine.delta/1000;
+            Y += (y - Y)/mod * speed * GameEngine.delta/1000;
+
+            return false; // returns true when point reached
+        }
     }
 
     public class SquareCollider : Component
