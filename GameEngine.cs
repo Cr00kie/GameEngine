@@ -98,6 +98,7 @@
     public static class Renderer
     {
         public static char[,] screen = new char[32,32];
+
         public static void AddObjectToScreen(int posX, int posY, char[,] sprite)
         {
             for (int i = 0; i<sprite.GetLength(0) && i+posY < screen.GetLength(0); i++)
@@ -128,16 +129,42 @@
         {
             //Write the screen
             Console.CursorVisible = false;
+
+            //Upper and bottom borders
+            string upBord = "";
+            string botBord = "";
+            for (int i = 0; i <= screen.GetLength(1)+1; i++)
+            {
+                if(i == 0)
+                {
+                    upBord += "╔";
+                    botBord += "╚";
+                }
+                else if(i == screen.GetLength(1) + 1)
+                {
+                    upBord += "╗";
+                    botBord += "╝";
+                }
+                else
+                {
+                    upBord += "═";
+                    botBord += "═";
+                }
+            }
+            Console.SetCursorPosition(0, 0); Console.Write(upBord);
+            Console.SetCursorPosition(0, screen.GetLength(0)+1); Console.Write(botBord);
+
             string buffer = "";
             for (int i = 0; i < screen.GetLength(0); i++)
             {
+                buffer += "║";
                 for (int j = 0; j < screen.GetLength(1); j++)
                 {
                     buffer += screen[i, j];
                 }
-                buffer += "\n";
+                buffer += "║\n";
             }
-            Console.SetCursorPosition(0, 0);
+            Console.SetCursorPosition(0, 1);
             Console.WriteLine(buffer);
             Console.SetCursorPosition(0, 0);
 
@@ -166,7 +193,7 @@
             {
                 debuggerMessages += $"{messages.Count-i}| {DateTime.Now} - {messages[i]}                                                                    \n";
             }
-            Console.SetCursorPosition(0, GameEngine.CurrScene.sceneHeight + 1);
+            Console.SetCursorPosition(0, GameEngine.CurrScene.sceneHeight + 2);
             Console.WriteLine(debuggerMessages);
         }
     }
