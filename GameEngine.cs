@@ -286,17 +286,6 @@
             this.tag = tag;
             this.keepWhenChangingScreens = keepWhenChangingScreens;
         }
-        public GameObject(string tag, int x = 0, int y = 0, int width = 1, int height = 1, bool keepWhenChangingScreens = false ,params Component[] components)
-        {
-            transform = new Transform(this);
-            this.components.Add(transform);
-            this.keepWhenChangingScreens = keepWhenChangingScreens;
-            foreach (Component comp in components)
-            {
-                AddComponent(comp);
-            }
-            this.tag = tag;
-        }
 
         public virtual void Update()
         {
@@ -320,5 +309,31 @@
         {
             GameEngine.CurrScene.DestroyObject(this);
         }
+    }
+
+    public class TextObject : GameObject
+    {
+        SpriteRenderer textRenderer;
+        string text = string.Empty;
+        public string Text 
+        {
+            get
+            {
+                return text;
+            }
+            set
+            {
+                text = value;
+                base.RemoveComponent(textRenderer);
+                textRenderer = new SpriteRenderer(this, text);
+                base.AddComponent(textRenderer);
+            }
+        }
+        public TextObject(string tag, string text = "Text", int x = 0, int y = 0, int width = 1, int height = 1, bool keepWhenChangingScreens = false) : base(tag, x, y, width, height, keepWhenChangingScreens)
+        {
+            Text = text;
+            if(textRenderer != null) base.AddComponent(textRenderer);
+        }
+
     }
 }

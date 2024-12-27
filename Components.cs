@@ -58,11 +58,14 @@ namespace GameEngine
 
         public bool MoveTowards(float x, float y, float speed)
         {
-            if ((int)x == (int)X && (int)y == (int)Y) 
+            ///<summary>Moves object towards x and y gradually</summary>
+            if ((int)x == (int)X && (int)y == (int)Y)
+            {
+                X = x; Y = y;
                 return true;
-            float mod = (float)Math.Sqrt((x - X) * (x - X) + (y - Y) * (y - Y));
-            X += (x - X)/mod * speed * GameEngine.delta/1000;
-            Y += (y - Y)/mod * speed * GameEngine.delta/1000;
+            }
+            X += (x - X) * speed * GameEngine.delta/1000;
+            Y += (y - Y) * speed * GameEngine.delta/1000;
 
             return false; // returns true when point reached
         }
@@ -70,8 +73,10 @@ namespace GameEngine
 
     public class SquareCollider : Component
     {
-        public SquareCollider(GameObject gameObject) : base(gameObject)
+        public bool isTrigger;
+        public SquareCollider(GameObject gameObject, bool isTrigger) : base(gameObject)
         {
+            this.isTrigger = isTrigger;
         }
 
         public override void UpdateComponent()
@@ -85,8 +90,31 @@ namespace GameEngine
                     gameObject.CallCollisionEvent(go);
                     go.CallCollisionEvent(gameObject);
                     Debugger.Write($"Collision Detected between {gameObject.tag}({gameObject.transform.X}, {gameObject.transform.Y}) and {go.tag}({go.transform.X}, {go.transform.Y})");
+                    SquareCollider goCollider = (SquareCollider)go.GetComponent<SquareCollider>();
+                    if(!goCollider.isTrigger) SeparateObjects(go);
                 }
             }
+        }
+
+        public void SeparateObjects(GameObject objCollided)
+        {
+            float desplazamientoX = 0;
+            float desplazamientoY = 0;
+            //No es muy bonito pero ahora no se me ocurre nada mejor
+            if (gameObject.transform.X0 - gameObject.transform.X > 0) desplazamientoX = 1;
+            else if (gameObject.transform.X0 - gameObject.transform.X < 0) desplazamientoX = -1;
+            if (gameObject.transform.Y0 - gameObject.transform.Y > 0) desplazamientoY = 1;
+            else if (gameObject.transform.Y0 - gameObject.transform.Y < 0) desplazamientoY = -1;
+            if (desplazamientoX != 0 && desplazamientoY != 0) // if we don't check this it will be stuck in a loop forever
+            {
+                do
+                {
+                    gameObject.transform.X += desplazamientoX;
+                    gameObject.transform.Y += desplazamientoY;
+
+                } while (CollisionDetector.AABCollision(gameObject, objCollided));
+            }
+
         }
     }
     public class SpriteRenderer : Component
@@ -138,29 +166,6 @@ namespace GameEngine
 
                 }
             }
-        }
-    }
-    public class SolidBehaviour : Component
-    {
-        public SolidBehaviour(GameObject gameObject) : base(gameObject)
-        {
-            gameObject.OnCollision += OnCollision;
-        }
-        public void OnCollision(GameObject objCollided)
-        {
-            float desplazamientoX = 0;
-            float desplazamientoY = 0;
-            //No es muy bonito pero ahora no se me ocurre nada mejor
-            if (gameObject.transform.X0 - gameObject.transform.X > 0) desplazamientoX = 1;
-            else if (gameObject.transform.X0 - gameObject.transform.X < 0) desplazamientoX = -1;
-            if (gameObject.transform.Y0 - gameObject.transform.Y > 0) desplazamientoY = 1;
-            else if (gameObject.transform.Y0 - gameObject.transform.Y < 0) desplazamientoY = -1;
-            do
-            {
-                gameObject.transform.X += desplazamientoX;
-                gameObject.transform.Y += desplazamientoY;
-            } while (CollisionDetector.AABCollision(gameObject, objCollided));
-
         }
     }
 }
