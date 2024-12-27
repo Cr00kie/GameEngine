@@ -1,4 +1,6 @@
-﻿namespace GameEngine
+﻿using System.Diagnostics;
+
+namespace GameEngine
 {
     public static class GameEngine
     {
@@ -17,13 +19,19 @@
             bool gameRunning = true;
 
             int frameCount = 0;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            long lastFrameTime = stopwatch.ElapsedMilliseconds;
             while (gameRunning)
             {
                 Input.UpdateInput();
                 GameEngine.CurrScene.UpdateObjects();
                 Renderer.RenderScene();
-                Thread.Sleep(GameEngine.delta);
-                Console.Title = "frames: " + frameCount;
+                long newTime = stopwatch.ElapsedMilliseconds;
+                delta = (int)(newTime - lastFrameTime);
+                if (delta == 0) delta = 1;
+                lastFrameTime = newTime;
+                Console.Title = 1000/delta + "fps || delta: " + (float)delta/1000f + "s";
                 frameCount++;
             }
         }
@@ -314,6 +322,7 @@
     public class TextObject : GameObject
     {
         SpriteRenderer textRenderer;
+        ResizableBoxRenderer boxRenderer;
         string text = string.Empty;
         public string Text 
         {
@@ -325,12 +334,20 @@
             {
                 text = value;
                 base.RemoveComponent(textRenderer);
-                textRenderer = new SpriteRenderer(this, text);
+                textRenderer = new SpriteRenderer(this, text, 1, 1);
+                transform.width = text.Length+2;
+                transform.height = 3;
                 base.AddComponent(textRenderer);
             }
         }
-        public TextObject(string tag, string text = "Text", int x = 0, int y = 0, int width = 1, int height = 1, bool keepWhenChangingScreens = false) : base(tag, x, y, width, height, keepWhenChangingScreens)
+        public TextObject(string tag, string text = "Text", bool hasBox = false, bool boxDoubleLine = false, int x = 0, int y = 0, bool keepWhenChangingScreens = false) : base(tag, x, y, text.Length+1, 3, keepWhenChangingScreens)
         {
+            if (hasBox)
+            {
+                boxRenderer = new ResizableBoxRenderer(this, boxDoubleLine);
+                base.AddComponent(boxRenderer);
+            }
+            // THE BOX MUST BE RENDERED BEFORE THE TEXT
             Text = text;
             if(textRenderer != null) base.AddComponent(textRenderer);
         }

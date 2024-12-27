@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Formats.Asn1;
 using System.Linq;
 using System.Text;
@@ -120,23 +121,87 @@ namespace GameEngine
     public class SpriteRenderer : Component
     {
         public char[,] sprite;
-        public SpriteRenderer(GameObject gameObject, char[,] sprite) : base(gameObject) { this.sprite = sprite; }
+        public int xOffSet;
+        public int yOffSet;
+        public SpriteRenderer(GameObject gameObject, char[,] sprite, int xOffSet = 0, int yOffSet = 0) : base(gameObject)
+        {
+            this.sprite = sprite;
+            this.xOffSet = xOffSet;
+            this.yOffSet = yOffSet;
+        }
         public SpriteRenderer(GameObject gameObject, char texture) : base(gameObject)
         {
             sprite = new char[gameObject.transform.height,gameObject.transform.width];
             for(int i = 0; i < sprite.GetLength(0); i++) for(int j = 0; j < sprite.GetLength(1); j++) sprite[i,j] = texture;
         }
-        public SpriteRenderer(GameObject gameObject, string text) : base(gameObject)
+        public SpriteRenderer(GameObject gameObject, string text, int xOffSet = 0, int yOffSet = 0) : base(gameObject)
         {
+            this.xOffSet = xOffSet;
+            this.yOffSet = yOffSet;
             sprite = new char[1, text.Length];
             for(int i = 0; i < text.Length; i++) sprite[0,i] = text[i];
         }
 
         public override void UpdateComponent()
         {
-            Renderer.AddObjectToScreen((int)gameObject.transform.X, (int)gameObject.transform.Y, sprite);
+            Renderer.AddObjectToScreen((int)gameObject.transform.X + xOffSet, (int)gameObject.transform.Y + yOffSet, sprite);
         }
 
+    }
+    public class ResizableBoxRenderer : SpriteRenderer
+    {
+        char upLeft, upRight, downLeft, downRight, ver, hor;
+        public char fill;
+        public bool doubleLine;
+        public ResizableBoxRenderer(GameObject gameObject, bool doubleLine = false, char fill = ' ') : base(gameObject, new char[gameObject.transform.height,gameObject.transform.width])
+        {
+            this.doubleLine = doubleLine;
+            this.fill = fill;
+            sprite = MakeBox();
+        }
+        public char[,] MakeBox()
+        {
+            char[,] ret = new char[gameObject.transform.height, gameObject.transform.width];
+            if (doubleLine)
+            {
+                upLeft = '╔';
+                upRight = '╗';
+                downLeft = '╚';
+                downRight = '╝';
+                ver = '║';
+                hor = '═';
+            }
+            else
+            {
+                upLeft = '┌';
+                upRight = '┐';
+                downLeft = '└';
+                downRight = '┘';
+                ver = '│';
+                hor = '─';
+            }
+            for (int i = 0; i < gameObject.transform.height; i++)
+            {
+                for (int j = 0; j < gameObject.transform.width; j++)
+                {
+                    if (i == 0 || i == gameObject.transform.height - 1) ret[i, j] = hor;
+                    else if (j == 0 || j == gameObject.transform.width - 1) ret[i, j] = ver;
+                    else ret[i, j] = fill;
+                }
+            }
+            ret[0, 0] = upLeft;
+            ret[0, gameObject.transform.width - 1] = upRight;
+            ret[gameObject.transform.height - 1, 0] = downLeft;
+            ret[gameObject.transform.height - 1, gameObject.transform.width - 1] = downRight;
+
+            return ret;
+        }
+
+        public override void UpdateComponent()
+        {
+            if (gameObject.transform.height != sprite.GetLength(0) || gameObject.transform.width != sprite.GetLength(1)) sprite = MakeBox();
+            base.UpdateComponent();
+        }
     }
     public class PlayerMovement : Component
     {
